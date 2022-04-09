@@ -26,6 +26,7 @@
 #include <vector>
 #include <atomic>
 #include <stdlib.h>
+#include <thread>
 
 #define NAPI_VERSION 3
 #include <napi.h>
@@ -65,11 +66,38 @@ private:
   Napi::Value getDeviceInfo(const Napi::CallbackInfo &info);
 };
 
+
+
+/**
+ * @Author: Arthur Xin
+ * @description: Write Log
+ * @param {char*} msg
+ * @param {int} index
+ * @return {*}
+ */
+void Log(const char* msg, int index = 0) {
+  std::ostringstream os;
+  os << "[0x" << std::hex << std::hash<std::thread::id>{} (std::this_thread::get_id()) << "-0x" << index << "]";
+  Logger->info("{}{}", os.str(), msg);
+}
+
 HID::HID(const Napi::CallbackInfo &info)
     : Napi::ObjectWrap<HID>(info)
 {
   instanceIndex = ++index;
-  Logger->info("[{}]HID::HID()", instanceIndex);
+  Log("HID::HID()", instanceIndex);
+
+  // test thread id
+  {
+    std::thread t1([]() {
+      Log("this is test thread", 101);
+    });
+    std::thread t2([]() {
+      Log("this is test thread", 102);
+    });
+    t1.join();
+    t2.join();
+  }
 
   Napi::Env env = info.Env();
 
@@ -131,12 +159,13 @@ HID::HID(const Napi::CallbackInfo &info)
 HID::~HID()  { 
   closeHandle(); 
 
-  Logger->info("[{}]HID::~HID()", instanceIndex);
+  Log("HID::~HID()", instanceIndex);
+  Logger->flush();
 }
 
 void HID::closeHandle()
 {
-  Logger->info("[{}]HID::closeHandle()", instanceIndex);
+  Log("HID::closeHandle()", instanceIndex);
 
   if (_hidHandle)
   {
@@ -197,7 +226,7 @@ private:
 
 Napi::Value HID::read(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::read()", instanceIndex);
+  Log("HID::read()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -216,7 +245,7 @@ Napi::Value HID::read(const Napi::CallbackInfo &info)
 
 Napi::Value HID::readSync(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::readSync()", instanceIndex);
+  Log("HID::readSync()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -244,7 +273,7 @@ Napi::Value HID::readSync(const Napi::CallbackInfo &info)
 
 Napi::Value HID::readTimeout(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::readTimeout()", instanceIndex);
+  Log("HID::readTimeout()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -273,7 +302,7 @@ Napi::Value HID::readTimeout(const Napi::CallbackInfo &info)
 
 Napi::Value HID::getFeatureReport(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::getFeatureReport()", instanceIndex);
+  Log("HID::getFeatureReport()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -311,7 +340,7 @@ Napi::Value HID::getFeatureReport(const Napi::CallbackInfo &info)
 
 Napi::Value HID::sendFeatureReport(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::sendFeatureReport()", instanceIndex);
+  Log("HID::sendFeatureReport()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -364,7 +393,7 @@ Napi::Value HID::sendFeatureReport(const Napi::CallbackInfo &info)
 
 Napi::Value HID::close(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::close()", instanceIndex);
+  Log("HID::close()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -374,7 +403,7 @@ Napi::Value HID::close(const Napi::CallbackInfo &info)
 
 Napi::Value HID::setNonBlocking(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::setNonBlocking()", instanceIndex);
+  Log("HID::setNonBlocking()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -397,7 +426,7 @@ Napi::Value HID::setNonBlocking(const Napi::CallbackInfo &info)
 
 Napi::Value HID::write(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::write()", instanceIndex);
+  Log("HID::write()", instanceIndex);
 
   Napi::Env env = info.Env();
 
@@ -467,7 +496,7 @@ static std::string narrow(wchar_t *wide)
 
 Napi::Value HID::getDeviceInfo(const Napi::CallbackInfo &info)
 {
-  Logger->info("[{}]HID::getDeviceInfo()", instanceIndex);
+  Log("HID::getDeviceInfo()", instanceIndex);
 
   Napi::Env env = info.Env();
 
