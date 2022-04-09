@@ -4,6 +4,12 @@ const nari_ultimate = require('./devices/razer_nari_ultimate.js');
 
 let hasOpen = false;
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: get host hid devices
+ * @param {*}
+ * @return {*}
+ */
 function getDevices() {
   ipcRenderer.invoke(IPC_CHANNEL, {
     action: HID_ACTION.GETDEVICES,
@@ -43,6 +49,12 @@ function getDevices() {
   })
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Open hid device
+ * @param {*}
+ * @return {*}
+ */
 function openDevice() {
   if (hasOpen) {
     alert('already open');
@@ -75,6 +87,12 @@ function openDevice() {
   })
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Send data
+ * @param {*}
+ * @return {*}
+ */
 async function send() {
   if (!hasOpen) {
     alert('please open device first');
@@ -96,6 +114,13 @@ async function send() {
   })
 }
 
+
+/******* 
+ * @Author: Arthur Xin
+ * @description: Send and receive data
+ * @param {*}
+ * @return {*}
+ */
 async function sendAndReceive() {
   if (!hasOpen) {
     alert('please open device first');

@@ -1,3 +1,11 @@
+/******* 
+ * @Author: Arthur Xin
+ * @Date: 2022-04-09 11:28:48
+ * @LastEditTime: 2022-04-09 14:17:08
+ * @LastEditors: Arthur Xin
+ * @Description: 
+ */
+
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
@@ -47,6 +55,7 @@ app.on('window-all-closed', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
 let actionMap = new Map();
 actionMap.set(HID_ACTION.GETDEVICES, hid.getDevices);
 actionMap.set(HID_ACTION.OPENDEVICE, hid.openDevice);
@@ -61,6 +70,12 @@ function formateResponse(success, error = '', data = '', ) {
   });
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: IPC center
+ * @param {*}
+ * @return {*}
+ */
 ipcMain.handle(IPC_CHANNEL, async (event, args) => {
   console.log('action:', args?.action);
   let action = args?.action;

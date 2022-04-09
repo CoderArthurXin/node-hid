@@ -1,11 +1,30 @@
+/******* 
+ * @Author: Arthur Xin
+ * @Date: 2022-04-09 11:52:10
+ * @LastEditTime: 2022-04-09 14:16:50
+ * @LastEditors: Arthur Xin
+ * @Description: 
+ */
 let HID = require('..');
 
 let device_handle
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Get host hid devices list
+ * @param {*}
+ * @return {*}
+ */
 async function getDevices() {
   return HID.devices();
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Open hid device
+ * @param {*}
+ * @return {*}
+ */
 async function openDevice({ path }) {
   if (device_handle) {
     return false;
@@ -22,6 +41,12 @@ async function openDevice({ path }) {
   return result;
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Send feature report
+ * @param {*}
+ * @return {*}
+ */
 async function sendFeatureReport({
   data
 }) {
@@ -35,6 +60,12 @@ async function sendFeatureReport({
   return wb === data.length;
 }
 
+/******* 
+ * @Author: Arthur Xin
+ * @description: Get feature report
+ * @param {*}
+ * @return {*}
+ */
 async function getFeatureReport({
   reportId,
   reportLength
