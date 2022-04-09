@@ -5,3 +5,7 @@ npm-debug.log
 package-lock.json
 Release/
 prebuilds/
+logs/
+yarn.lock
+*.log
+.vscode/

@@ -1,6 +1,8 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+const { IPC_CHANNEL, HID_ACTION } = require('./common/constants.js');
+const hid = require('./hid.js');
 
 function createWindow () {
   // Create the browser window.
@@ -8,15 +10,17 @@ function createWindow () {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: false,
     }
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile('./renderer/index.html')
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished
@@ -41,3 +45,25 @@ app.on('window-all-closed', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+let actionMap = new Map();
+actionMap.set(HID_ACTION.GETDEVICES, hid.getDevices);
+actionMap.set(HID_ACTION.OPENDEVICE, hid.openDevice);
+
+function formateResponse(success, error = '', data = '', ) {
+  return {
+    success,
+    error,
+    data
+  }
+}
+
+ipcMain.handle(IPC_CHANNEL, async (event, args) => {
+  console.log('action:', args?.action);
+  let action = args?.action;
+  if (!actionMap.has(action)) {
+    return formateResponse(false, 'Action Not Support');
+  }
+
+  let data = actionMap.get(action)(args.payload);
+  return formateResponse(!!data, '', data);
+});
