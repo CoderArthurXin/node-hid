@@ -7,12 +7,20 @@
   <title>Node Hid</title>
 </head>
 <body>
-  <h1>My Devices: </h1>
-  <div id="devices"></div>
   <div>
-    <input type="text" name="path" id="path" size="120">
+    Path: <input type="text" name="path" id="path" size="100">
     <button onclick="openDevice()">OpenDevice</button>
   </div>
+  <br><hr><br>
+  <div>
+    <!-- <textarea name="request" id="request" cols="50" rows="15"></textarea>
+    <textarea name="response" id="response" cols="50" rows="15"></textarea> -->
+    <button onclick="send()">Send</button>
+    <button onclick="sendAndReceive()">Send And Receive</button>
+  </div>
+  <br><hr>
+  <h6>My Devices: </h1>
+  <div id="devices"></div>
   <script src="./index.js"></script>
 </body>
 </html>

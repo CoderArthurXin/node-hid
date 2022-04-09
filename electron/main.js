@@ -21,6 +21,8 @@ function createWindow () {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools()
+
+  mainWindow.maximize();
 }
 
 // This method will be called when Electron has finished
@@ -48,13 +50,15 @@ app.on('window-all-closed', function () {
 let actionMap = new Map();
 actionMap.set(HID_ACTION.GETDEVICES, hid.getDevices);
 actionMap.set(HID_ACTION.OPENDEVICE, hid.openDevice);
+actionMap.set(HID_ACTION.SENDFEATURE, hid.sendFeatureReport);
+actionMap.set(HID_ACTION.GETFEATURE, hid.getFeatureReport);
 
 function formateResponse(success, error = '', data = '', ) {
-  return {
+  return JSON.stringify({
     success,
     error,
     data
-  }
+  });
 }
 
 ipcMain.handle(IPC_CHANNEL, async (event, args) => {
@@ -64,6 +68,7 @@ ipcMain.handle(IPC_CHANNEL, async (event, args) => {
     return formateResponse(false, 'Action Not Support');
   }
 
-  let data = actionMap.get(action)(args.payload);
-  return formateResponse(!!data, '', data);
+  let result = await actionMap.get(action)(args.payload);
+  console.log('action result:', result);
+  return formateResponse(!!result, '', result);
 });

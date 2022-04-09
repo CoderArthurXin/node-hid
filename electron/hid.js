@@ -2,11 +2,15 @@ let HID = require('..');
 
 let device_handle
 
-function getDevices() {
+async function getDevices() {
   return HID.devices();
 }
 
-function openDevice({ path }) {
+async function openDevice({ path }) {
+  if (device_handle) {
+    return false;
+  }
+
   let result = true;
   console.log('path:', path);
   try {
@@ -18,7 +22,35 @@ function openDevice({ path }) {
   return result;
 }
 
+async function sendFeatureReport({
+  data
+}) {
+  if (!device_handle || !data) {
+    return false;
+  } 
+
+  let wb = await device_handle.sendFeatureReport(data);
+
+  console.log(`sendFeatureReport ${wb}=?${data.length}`);
+  return wb === data.length;
+}
+
+async function getFeatureReport({
+  reportId,
+  reportLength
+}) {
+  if (!device_handle || !reportId || !reportLength) {
+    return false;
+  } 
+
+  let receive = await device_handle.getFeatureReport(reportId, reportLength);
+  console.log('getFeatureReport receive:', receive);
+  return receive;
+}
+
 module.exports = {
   getDevices,
-  openDevice
+  openDevice,
+  sendFeatureReport,
+  getFeatureReport,
 }
