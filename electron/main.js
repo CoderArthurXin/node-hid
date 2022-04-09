@@ -1,7 +1,7 @@
 /******* 
  * @Author: Arthur Xin
  * @Date: 2022-04-09 11:28:48
- * @LastEditTime: 2022-04-09 14:17:08
+ * @LastEditTime: 2022-04-09 15:45:21
  * @LastEditors: Arthur Xin
  * @Description: 
  */
@@ -12,7 +12,7 @@ const path = require('path')
 const { IPC_CHANNEL, HID_ACTION } = require('./common/constants.js');
 const hid = require('./hid.js');
 
-function createWindow () {
+function createWindow (hash) {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -25,10 +25,12 @@ function createWindow () {
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('./renderer/index.html')
+  mainWindow.loadFile('./renderer/index.html', {
+    hash,
+  })
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools();
 
   mainWindow.maximize();
 }
@@ -37,12 +39,13 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow()
+  createWindow('page_01');
+  createWindow('page_02');
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createWindow('page_01')
   })
 })
 

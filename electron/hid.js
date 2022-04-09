@@ -1,13 +1,13 @@
 /******* 
  * @Author: Arthur Xin
  * @Date: 2022-04-09 11:52:10
- * @LastEditTime: 2022-04-09 14:16:50
+ * @LastEditTime: 2022-04-09 15:08:22
  * @LastEditors: Arthur Xin
  * @Description: 
  */
 let HID = require('..');
 
-let device_handle
+let deviceHandleMap = new Map();
 
 /******* 
  * @Author: Arthur Xin
@@ -25,15 +25,16 @@ async function getDevices() {
  * @param {*}
  * @return {*}
  */
-async function openDevice({ path }) {
-  if (device_handle) {
-    return false;
+async function openDevice({ pageId, path }) {
+  if (deviceHandleMap.has(pageId)) {
+    return true; // alread open
   }
 
   let result = true;
   console.log('path:', path);
   try {
-    device_handle = new HID.HID(path);
+    let deviceHandle = new HID.HID(path);
+    deviceHandleMap.set(pageId, deviceHandle);
   } catch(e) {
     console.log(e);
     result = false;
@@ -48,13 +49,14 @@ async function openDevice({ path }) {
  * @return {*}
  */
 async function sendFeatureReport({
+  pageId,
   data
 }) {
-  if (!device_handle || !data) {
+  if (!deviceHandleMap.has(pageId) || !data) {
     return false;
   } 
 
-  let wb = await device_handle.sendFeatureReport(data);
+  let wb = await deviceHandleMap.get(pageId).sendFeatureReport(data);
 
   console.log(`sendFeatureReport ${wb}=?${data.length}`);
   return wb === data.length;
@@ -67,14 +69,15 @@ async function sendFeatureReport({
  * @return {*}
  */
 async function getFeatureReport({
+  pageId,
   reportId,
   reportLength
 }) {
-  if (!device_handle || !reportId || !reportLength) {
+  if (!deviceHandleMap.has(pageId) || !reportId || !reportLength) {
     return false;
   } 
 
-  let receive = await device_handle.getFeatureReport(reportId, reportLength);
+  let receive = await deviceHandleMap.get(pageId).getFeatureReport(reportId, reportLength);
   console.log('getFeatureReport receive:', receive);
   return receive;
 }

@@ -2,6 +2,9 @@ const { ipcRenderer } = require('electron');
 const { IPC_CHANNEL, VENDOR_ID, HID_ACTION } = require('../common/constants.js');
 const nari_ultimate = require('./devices/razer_nari_ultimate.js');
 
+console.log(window.location.hash);
+
+const PAGE_ID = window.location.hash;
 let hasOpen = false;
 
 /******* 
@@ -24,6 +27,8 @@ function getDevices() {
       alert(error || 'Get Devices Fail');
       return;
     }
+
+    console.log('devices:', data);
 
     let parent = document.getElementById("devices");
     let path = document.getElementById('path');
@@ -70,6 +75,7 @@ function openDevice() {
   ipcRenderer.invoke(IPC_CHANNEL, {
     action: HID_ACTION.OPENDEVICE,
     payload: {
+      pageId: PAGE_ID,
       path: path.trim(),
     }
   }).then((res) => {
@@ -102,6 +108,7 @@ async function send() {
   return await ipcRenderer.invoke(IPC_CHANNEL, {
     action: HID_ACTION.SENDFEATURE,
     payload: {
+      pageId: PAGE_ID,
       data: nari_ultimate.GET_FIRMWARE_VERSION,
     }
   }).then((res) => {
@@ -133,6 +140,7 @@ async function sendAndReceive() {
     ipcRenderer.invoke(IPC_CHANNEL, {
       action: HID_ACTION.GETFEATURE,
       payload: {
+        pageId: PAGE_ID,
         reportId: nari_ultimate.REPORT_ID,
         reportLength: nari_ultimate.REPORT_LENGTH,
       }
@@ -142,11 +150,28 @@ async function sendAndReceive() {
         data
       } = JSON.parse(res);
 
-      alert(success ? data : 'receive no data');
+      // alert(success ? data : 'receive no data');
       console.log(data);
-      
     })
   }
+}
+
+/******* 
+ * @Author: Arthur Xin
+ * @description: send data
+ * @param {*}
+ * @return {*}
+ */
+function loopSend() {
+  let loop = 20;
+  let interval = setInterval(() => {
+    sendAndReceive();
+    if (--loop < 1) {
+      clearInterval(interval);
+      console.log('loop end');
+      alert(PAGE_ID + 'loop end');
+    }
+  }, 1000);
 }
 
 getDevices();
