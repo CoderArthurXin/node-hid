@@ -8,6 +8,7 @@
             'target_name': 'HID',
             'sources': [ 'src/HID.cc' ],
             'dependencies': ['hidapi'],
+            'include_dirs': ['include'],
             'defines': [
                 '_LARGEFILE_SOURCE',
                 '_FILE_OFFSET_BITS=64',

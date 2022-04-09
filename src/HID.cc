@@ -24,15 +24,19 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
-
+#include <atomic>
 #include <stdlib.h>
 
 #define NAPI_VERSION 3
 #include <napi.h>
 
 #include <hidapi.h>
+#include "spdlog/sinks/rotating_file_sink.h"
 
 #define READ_BUFF_MAXSIZE 2048
+
+std::atomic<int> index(0);
+auto Logger = spdlog::rotating_logger_mt("hid", "logs/hid.log", 1048576 * 5, 3);
 
 class HID : public Napi::ObjectWrap<HID>
 {
@@ -42,9 +46,10 @@ public:
   void closeHandle();
 
   HID(const Napi::CallbackInfo &info);
-  ~HID() { closeHandle(); }
+  ~HID();
 
   hid_device *_hidHandle;
+  int instanceIndex;
 
 private:
   static Napi::Value devices(const Napi::CallbackInfo &info);
@@ -63,6 +68,9 @@ private:
 HID::HID(const Napi::CallbackInfo &info)
     : Napi::ObjectWrap<HID>(info)
 {
+  instanceIndex = ++index;
+  Logger->info("[{}]HID::HID()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (!info.IsConstructCall())
@@ -120,8 +128,16 @@ HID::HID(const Napi::CallbackInfo &info)
   }
 }
 
+HID::~HID()  { 
+  closeHandle(); 
+
+  Logger->info("[{}]HID::~HID()", instanceIndex);
+}
+
 void HID::closeHandle()
 {
+  Logger->info("[{}]HID::closeHandle()", instanceIndex);
+
   if (_hidHandle)
   {
     hid_close(_hidHandle);
@@ -155,6 +171,9 @@ public:
     {
       len = hid_read_timeout(_hid->_hidHandle, buf, READ_BUFF_MAXSIZE, mswait);
     }
+
+    Logger->info("[{}]read done, length {}", _hid->instanceIndex, len);
+
     if (len <= 0)
     {
       SetError("could not read from HID device");
@@ -163,6 +182,8 @@ public:
 
   void OnOK() override
   {
+    Logger->info("[{}]read callback", _hid->instanceIndex);
+
     auto buffer = Napi::Buffer<unsigned char>::New(Env(), buf, len, deleteArray);
     buf = nullptr; // It is now owned by the buffer
     Callback().Call({Env().Null(), buffer});
@@ -176,6 +197,8 @@ private:
 
 Napi::Value HID::read(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::read()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 1 || !info[0].IsFunction())
@@ -193,6 +216,8 @@ Napi::Value HID::read(const Napi::CallbackInfo &info)
 
 Napi::Value HID::readSync(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::readSync()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 0)
@@ -219,6 +244,8 @@ Napi::Value HID::readSync(const Napi::CallbackInfo &info)
 
 Napi::Value HID::readTimeout(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::readTimeout()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 1 || !info[0].IsNumber())
@@ -246,6 +273,8 @@ Napi::Value HID::readTimeout(const Napi::CallbackInfo &info)
 
 Napi::Value HID::getFeatureReport(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::getFeatureReport()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 2 || !info[0].IsNumber() || !info[1].IsNumber())
@@ -282,6 +311,8 @@ Napi::Value HID::getFeatureReport(const Napi::CallbackInfo &info)
 
 Napi::Value HID::sendFeatureReport(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::sendFeatureReport()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
@@ -333,6 +364,8 @@ Napi::Value HID::sendFeatureReport(const Napi::CallbackInfo &info)
 
 Napi::Value HID::close(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::close()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   this->closeHandle();
@@ -341,6 +374,8 @@ Napi::Value HID::close(const Napi::CallbackInfo &info)
 
 Napi::Value HID::setNonBlocking(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::setNonBlocking()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
@@ -362,6 +397,8 @@ Napi::Value HID::setNonBlocking(const Napi::CallbackInfo &info)
 
 Napi::Value HID::write(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::write()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
@@ -430,6 +467,8 @@ static std::string narrow(wchar_t *wide)
 
 Napi::Value HID::getDeviceInfo(const Napi::CallbackInfo &info)
 {
+  Logger->info("[{}]HID::getDeviceInfo()", instanceIndex);
+
   Napi::Env env = info.Env();
 
   const int maxlen = 256;
@@ -451,6 +490,8 @@ Napi::Value HID::getDeviceInfo(const Napi::CallbackInfo &info)
 
 Napi::Value HID::devices(const Napi::CallbackInfo &info)
 {
+  Logger->info("HID::devices()");
+
   Napi::Env env = info.Env();
 
   int vendorId = 0;
@@ -512,6 +553,8 @@ Napi::Value HID::devices(const Napi::CallbackInfo &info)
 static void
 deinitialize(void *)
 {
+  Logger->info("deinitialize");
+
   if (hid_exit())
   {
     // Process is exiting, no need to log? TODO
@@ -521,6 +564,8 @@ deinitialize(void *)
 }
 void HID::Initialize(Napi::Env &env, Napi::Object &exports)
 {
+  Logger->info("HID::Initialize()");
+
   if (hid_init())
   {
     Napi::TypeError::New(env, "cannot initialize hidapi (hid_init failed)").ThrowAsJavaScriptException();
@@ -547,6 +592,8 @@ void HID::Initialize(Napi::Env &env, Napi::Object &exports)
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
+  Logger->info("Init()");
+
   HID::Initialize(env, exports);
 
   return exports;
