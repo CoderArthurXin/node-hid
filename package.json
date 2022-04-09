@@ -15,6 +15,7 @@
     "url": "git://github.com/node-hid/node-hid.git"
   },
   "scripts": {
+    "electron": "electron ./electron/main.js",
     "test": "node src/test-ci.js",
     "showdevices": "node src/show-devices.js",
     "prepublishOnly": "git submodule update --init",
@@ -50,6 +51,7 @@
     "prebuild-install": "^6.0.0"
   },
   "devDependencies": {
+    "electron": "^18.0.3",
     "prebuild": "^10.0.1",
     "rimraf": "^2.6.2"
   },
