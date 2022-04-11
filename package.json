@@ -26,6 +26,7 @@
     "gypconfigure": "node-gyp configure",
     "gypbuild": "node-gyp build",
     "gyprebuild": "node-gyp rebuild",
+    "gyprebuild:debug": "node-gyp rebuild --debug",
     "clean": "rimraf build node_modules prebuilds package-lock.json",
     "distclean": "npm run clean && rimraf hidapi"
   },
